@@ -20,7 +20,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.net.Socket;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
+    Socket socket = null;
+
+
 
     private GoogleMap mMap;
     LocationManager locationManager;
@@ -73,7 +78,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN); //type de map : hybrid normal ...
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL); //type de map : hybrid normal ...
 
 
 
