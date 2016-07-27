@@ -23,9 +23,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.net.Socket;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
-    Socket socket = null;
-
-
 
     private GoogleMap mMap;
     LocationManager locationManager;
@@ -79,7 +76,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL); //type de map : hybrid normal ...
-
+       
+        // Add a marker in Sydney and move the camera
+        LatLng sydney = new LatLng(-34, 151);
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
 
     }
