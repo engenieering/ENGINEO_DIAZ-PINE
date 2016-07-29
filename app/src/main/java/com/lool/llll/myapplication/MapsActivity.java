@@ -3,6 +3,8 @@ package com.lool.llll.myapplication;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -10,6 +12,7 @@ import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -22,44 +25,44 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
-
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener  {
+    LatLng ss = new LatLng(-34, 101);
+    LatLng sss = new LatLng(-12, 151);
     static final int SocketServerPORT = 8080;
 
     TextView infoIp, infoPort, chatMsg;
     Spinner spUsers;
     ArrayAdapter<ChatClient> spUsersAdapter;
     Button btnSentTo;
-
     String msgLog = "";
-
     List<ChatClient> userList;
-
     ServerSocket serverSocket;
 
-
-
-
-
-    private GoogleMap mMap;
+    public GoogleMap mMap;
     LocationManager locationManager;
     String provider;
-
+    SupportMapFragment mapFragment ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,9 +92,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Toast.makeText(this, "connection failed", Toast.LENGTH_SHORT).show();
         }
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+
         infoIp = (TextView) findViewById(R.id.infoip);
         infoPort = (TextView) findViewById(R.id.infoport);
         chatMsg = (TextView) findViewById(R.id.chatmsg);
@@ -108,11 +113,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         infoIp.setText(getIpAddress());
 
+
+
         ChatServerThread chatServerThread = new ChatServerThread();
         chatServerThread.start();
 
     }
-
 
     /**
      * Manipulates the map once available.
@@ -127,11 +133,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL); //type de map : hybrid normal ...
-       
+
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+       // LatLng sydney = new LatLng(-34, 151);
+
+        // mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+
+        //  mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+          for(int i=0; i<userList.size(); i++){
+            if( userList.get(i).latLng != null)
+                Log.i("infoo","latlllllll:"+ userList.get(i).latLng.toString());
+              addCustomMarker(userList.get(i).latLng);
+             // mMap.addMarker(new MarkerOptions().position(userList.get(i).latLng).title("Marker"));
+
+        }
+      //  addCustomMarker(ss);
+      //  addCustomMarker(sss);
 
 
     }
@@ -173,13 +191,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onLocationChanged(Location location) {
         double lat = location.getLatitude();
         double lng = location.getLongitude();
-
+/*
         mMap.clear();
         mMap.addMarker(new  MarkerOptions().position(new LatLng(lat,lng)).title("location"));
-        // mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+       // mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng), 15)); // zoom
-
-
+*/
     }
 
     @Override
@@ -234,14 +251,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void run() {
             Socket socket = null;
 
+
+
             try {
                 serverSocket = new ServerSocket(SocketServerPORT);
                 MapsActivity.this.runOnUiThread(new Runnable() {
 
                     @Override
                     public void run() {
-                        infoPort.setText("I'm waiting here: "
-                                + serverSocket.getLocalPort());
+                        infoPort.setText("I'm waiting here: " + serverSocket.getLocalPort());
                     }
                 });
 
@@ -323,7 +341,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if (dataInputStream.available() > 0) {
                         String newMsg = dataInputStream.readUTF();
 
+                        // newMsg...................................................................
+                        //..........................................................................
 
+                        Pattern pLat=Pattern.compile("lat(.*?)lng");
+
+                        Matcher mLat=pLat.matcher(newMsg);
+
+                        while (mLat.find()){
+                           // // TODO: 28/07/2016
+
+                            String[] strLATLNG = mLat.group(1).split("l");
+                            LatLng pReceived =  new LatLng( Double.parseDouble(strLATLNG[0]),Double.parseDouble(strLATLNG[1]));
+                            Log.i("infoo","latll:"+ pReceived.toString());
+                            connectClient.latLng=pReceived ;
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    addCustomMarker(connectClient.latLng);
+                                }
+                            });
+                           // mapFragment.getMapAsync(MapsActivity.this);
+                           // MapsActivity.this.mapFragment.getMapAsync(MapsActivity.this);
+                           //addCustomMarker(ss);
+                            Log.i("infoo","calllllllllllllllll");
+                        //    mapFragment.getMapAsync(MapsActivity);
+
+                            //Double.parseDouble(aString);
+
+
+                       /*    mMap.clear();
+                            LatLng sydney = new LatLng(-34, 151);
+                            mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+                            mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+                      */
+                       /*   LatLng pReceived =  new LatLng( Double.parseDouble(mLat.group(1)),Double.parseDouble(mLng.group(1)));
+                            mMap.addMarker(new  MarkerOptions().position(pReceived).title("received"));
+                            // mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pReceived, 15)); // zoom
+*/
+
+                        }
                         msgLog += n + ": " + newMsg;
                         MapsActivity.this.runOnUiThread(new Runnable() {
 
@@ -440,17 +499,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             ip += "Something Wrong! " + e.toString() + "\n";
         }
 
-        return ip;
+
+        LatLng latLng ;       return ip;
     }
 
     class ChatClient {
         String name;
         Socket socket;
         ConnectThread chatThread;
-
+        LatLng latLng ;
         @Override
         public String toString() {
             return name + ": " + socket.getInetAddress().getHostAddress();
         }
+    }
+
+
+    private void addCustomMarker(LatLng lll) {
+
+
+        if (mMap == null) {
+            return;
+        }
+        Log.d("infooo", "addCustomMarker()");
+        // adding a marker on map with image from  drawable
+        MapsActivity.this.mMap.addMarker(new MarkerOptions()
+                .position(lll)
+                );
+        MapsActivity.this.mMap.moveCamera(CameraUpdateFactory.newLatLng(lll));
     }
 }
