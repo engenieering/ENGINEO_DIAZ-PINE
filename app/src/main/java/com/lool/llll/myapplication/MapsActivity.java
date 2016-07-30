@@ -140,14 +140,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
 
         //  mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
-          for(int i=0; i<userList.size(); i++){
-            if( userList.get(i).latLng != null)
-                Log.i("infoo","latlllllll:"+ userList.get(i).latLng.toString());
-              addCustomMarker(userList.get(i).latLng);
-             // mMap.addMarker(new MarkerOptions().position(userList.get(i).latLng).title("Marker"));
-
-        }
+        refreshPosition();
       //  addCustomMarker(ss);
       //  addCustomMarker(sss);
 
@@ -359,7 +352,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    addCustomMarker(connectClient.latLng);
+                                   refreshPosition();
                                 }
                             });
                            // mapFragment.getMapAsync(MapsActivity.this);
@@ -514,8 +507,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    private void refreshPosition(){
+       mMap.clear();
+        for(int i=0; i<userList.size(); i++){
+            if( userList.get(i).latLng != null)
+                Log.i("infoo","latlllllll:"+ userList.get(i).latLng.toString());
+            addCustomMarker(userList.get(i));
+            // mMap.addMarker(new MarkerOptions().position(userList.get(i).latLng).title("Marker"));
 
-    private void addCustomMarker(LatLng lll) {
+        }
+    }
+    private void addCustomMarker(ChatClient chatClient) {
 
 
         if (mMap == null) {
@@ -524,8 +526,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.d("infooo", "addCustomMarker()");
         // adding a marker on map with image from  drawable
         MapsActivity.this.mMap.addMarker(new MarkerOptions()
-                .position(lll)
+                .position(chatClient.latLng)
+                .title(chatClient.name)
+
                 );
-        MapsActivity.this.mMap.moveCamera(CameraUpdateFactory.newLatLng(lll));
+      //  MapsActivity.this.mMap.moveCamera(CameraUpdateFactory.newLatLng(lll));
     }
 }
