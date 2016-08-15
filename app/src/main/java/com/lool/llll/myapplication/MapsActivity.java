@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -21,14 +22,17 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -48,7 +52,9 @@ import java.util.regex.Pattern;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener  {
     LatLng ss = new LatLng(-34, 101);
-    LatLng sss = new LatLng(-12, 151);
+    LatLng sss = new LatLng(-34, 102);
+    LatLng ssss = new LatLng(-34, 103);
+    List<LatLng> listLatLng ;
     static final int SocketServerPORT = 8080;
 
     TextView infoIp, infoPort, chatMsg;
@@ -68,6 +74,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // obtain th position
+
+        listLatLng = new ArrayList<LatLng>();
+        addCustomMarker(ss);
+        addCustomMarker(sss);
+        addCustomMarker(ssss);
+        listLatLng.add(ss);
+        listLatLng.add(sss);
+        listLatLng.add(ssss);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -140,6 +154,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
 
         //  mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        //
+      //  drawPolyLineOnMap(listLatLng);
         refreshPosition();
       //  addCustomMarker(ss);
       //  addCustomMarker(sss);
@@ -352,6 +368,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    //
+                                   // drawPolyLineOnMap(listLatLng);
                                    refreshPosition();
                                 }
                             });
@@ -501,6 +519,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Socket socket;
         ConnectThread chatThread;
         LatLng latLng ;
+        List<LatLng> latLngLista =  new ArrayList<LatLng>();
         @Override
         public String toString() {
             return name + ": " + socket.getInetAddress().getHostAddress();
@@ -509,10 +528,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void refreshPosition(){
        mMap.clear();
+
         for(int i=0; i<userList.size(); i++){
             if( userList.get(i).latLng != null)
                 Log.i("infoo","latlllllll:"+ userList.get(i).latLng.toString());
-            addCustomMarker(userList.get(i));
+                addCustomMarker(userList.get(i));
+                userList.get(i).latLngLista.add(userList.get(i).latLng);
+                drawPolyLineOnMap(userList.get(i).latLngLista);
             // mMap.addMarker(new MarkerOptions().position(userList.get(i).latLng).title("Marker"));
 
         }
@@ -530,6 +552,50 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .title(chatClient.name)
 
                 );
+
+
+
+
+
       //  MapsActivity.this.mMap.moveCamera(CameraUpdateFactory.newLatLng(lll));
     }
+    private void addCustomMarker(LatLng latLng) {
+
+
+        if (mMap == null) {
+            return;
+        }
+        Log.d("infooo", "addCustomMarker()");
+        // adding a marker on map with image from  drawable
+        MapsActivity.this.mMap.addMarker(new MarkerOptions()
+                .position(latLng)
+                .title("latlng")
+
+        );
+
+
+
+
+
+        //  MapsActivity.this.mMap.moveCamera(CameraUpdateFactory.newLatLng(lll));
+    }
+    public void drawPolyLineOnMap(List<LatLng> list) {
+        PolylineOptions polyOptions = new PolylineOptions();
+        polyOptions.color(Color.RED);
+        polyOptions.width(5);
+        polyOptions.addAll(list);
+        //step 2  MapsActivity.this.mMap
+        mMap.clear();
+        mMap.addPolyline(polyOptions);
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for (LatLng latLng : list) {
+            builder.include(latLng);
+        }
+        final LatLngBounds bounds = builder.build();
+        //BOUND_PADDING is an int to specify padding of bound.. try 100.
+        CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, 100);
+        mMap.animateCamera(cu);
+    }
+
+
 }
