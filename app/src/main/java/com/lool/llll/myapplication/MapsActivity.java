@@ -526,19 +526,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
+
+
+
+
+
     private void refreshPosition(){
        mMap.clear();
 
         for(int i=0; i<userList.size(); i++){
-            if( userList.get(i).latLng != null)
-                Log.i("infoo","latlllllll:"+ userList.get(i).latLng.toString());
+            if( userList.get(i).latLng != null) {
                 addCustomMarker(userList.get(i));
                 userList.get(i).latLngLista.add(userList.get(i).latLng);
+               // userList.get(i).latLng= null ;
                 drawPolyLineOnMap(userList.get(i).latLngLista);
-            // mMap.addMarker(new MarkerOptions().position(userList.get(i).latLng).title("Marker"));
-
+                // mMap.addMarker(new MarkerOptions().position(userList.get(i).latLng).title("Marker"));
+                // Log.i("infoo","latlllllll:"+ userList.get(i).latLng.toString());
+            }
+            cameraset();
         }
     }
+
+    public void drawPolyLineOnMap(List<LatLng> list) {
+        PolylineOptions polyOptions = new PolylineOptions();
+        polyOptions.color(Color.RED);
+        polyOptions.width(5);
+        polyOptions.addAll(list);
+        //step 2  MapsActivity.this.mMap
+       // mMap.clear();
+
+        mMap.addPolyline(polyOptions);
+
+    }
+
+    public void cameraset(){
+
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for (ChatClient client : userList) {
+            builder.include(client.latLng);
+        }
+        final LatLngBounds bounds = builder.build();
+        //BOUND_PADDING is an int to specify padding of bound.. try 100.
+        CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, 100);
+        mMap.animateCamera(cu);
+
+
+    }
+
     private void addCustomMarker(ChatClient chatClient) {
 
 
@@ -551,13 +586,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .position(chatClient.latLng)
                 .title(chatClient.name)
 
-                );
+        );
 
 
 
 
 
-      //  MapsActivity.this.mMap.moveCamera(CameraUpdateFactory.newLatLng(lll));
+        //  MapsActivity.this.mMap.moveCamera(CameraUpdateFactory.newLatLng(lll));
     }
     private void addCustomMarker(LatLng latLng) {
 
@@ -579,23 +614,4 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //  MapsActivity.this.mMap.moveCamera(CameraUpdateFactory.newLatLng(lll));
     }
-    public void drawPolyLineOnMap(List<LatLng> list) {
-        PolylineOptions polyOptions = new PolylineOptions();
-        polyOptions.color(Color.RED);
-        polyOptions.width(5);
-        polyOptions.addAll(list);
-        //step 2  MapsActivity.this.mMap
-        mMap.clear();
-        mMap.addPolyline(polyOptions);
-        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-        for (LatLng latLng : list) {
-            builder.include(latLng);
-        }
-        final LatLngBounds bounds = builder.build();
-        //BOUND_PADDING is an int to specify padding of bound.. try 100.
-        CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, 100);
-        mMap.animateCamera(cu);
-    }
-
-
 }
