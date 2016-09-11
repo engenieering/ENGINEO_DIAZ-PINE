@@ -16,8 +16,11 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,17 +54,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener  {
-    LatLng ss = new LatLng(-34, 101);
-    LatLng sss = new LatLng(-34, 102);
-    LatLng ssss = new LatLng(-34, 103);
-    List<LatLng> listLatLng ;
+
     static final int SocketServerPORT = 8080;
+
+    Button hidebutton;
+    View fVideo;
+    View fChat;
+    Boolean showed = true;
+
+
 
     TextView infoIp, infoPort, chatMsg;
     Spinner spUsers;
     ArrayAdapter<ChatClient> spUsersAdapter;
     Button btnSentTo;
     String msgLog = "";
+    EditText textmessage;
+    String Msg = "";
+
     List<ChatClient> userList;
     ServerSocket serverSocket;
 
@@ -69,19 +79,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationManager locationManager;
     String provider;
     SupportMapFragment mapFragment ;
+
+    public static String user;
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_maps);
         // obtain th position
 
-        listLatLng = new ArrayList<LatLng>();
-        addCustomMarker(ss);
-        addCustomMarker(sss);
-        addCustomMarker(ssss);
-        listLatLng.add(ss);
-        listLatLng.add(sss);
-        listLatLng.add(ssss);
+
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -114,7 +126,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         infoIp = (TextView) findViewById(R.id.infoip);
         infoPort = (TextView) findViewById(R.id.infoport);
         chatMsg = (TextView) findViewById(R.id.chatmsg);
-
+        textmessage = (EditText)findViewById(R.id.textMessage);
         spUsers = (Spinner) findViewById(R.id.spusers);
         userList = new ArrayList<ChatClient>();
         spUsersAdapter = new ArrayAdapter<ChatClient>(
@@ -122,11 +134,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         spUsersAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spUsers.setAdapter(spUsersAdapter);
 
+
         btnSentTo = (Button)findViewById(R.id.sentto);
         btnSentTo.setOnClickListener(btnSentToOnClickListener);
 
         infoIp.setText(getIpAddress());
 
+        hidebutton = (Button) findViewById(R.id.button2);
+        hidebutton.setVisibility(View.VISIBLE);
+        fVideo = findViewById(R.id.VideoFragment);
+        fChat = findViewById(R.id.Chat);
+
+        if (hidebutton != null)
+            hidebutton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (showed){
+                        fChat.setVisibility(View.GONE);
+                        fVideo.setVisibility(View.GONE);
+                        showed = false;
+                    }else {
+                        fChat.setVisibility(View.VISIBLE);
+                        fVideo.setVisibility(View.VISIBLE);
+                        showed = true;
+                    }
+                }
+            });
 
 
         ChatServerThread chatServerThread = new ChatServerThread();
@@ -228,9 +261,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onClick(View v) {
             ChatClient client = (ChatClient)spUsers.getSelectedItem();
             if(client != null){
-                String dummyMsg = "Dummy message00000000 from server.\n";
-                client.chatThread.sendMsg(dummyMsg);
-                msgLog += "- Dummy message to " + client.name + "\n";
+                //String dummyMsg = "From server.\n";
+                Msg = " Server : " + textmessage.getText().toString() + "\n" ;
+                client.chatThread.sendMsg(Msg);
+                msgLog += "- Message to " + client.name + Msg + "\n";
                 chatMsg.setText(msgLog);
 
             }else{
@@ -239,6 +273,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
     };
+
 
     @Override
     protected void onDestroy() {
@@ -526,6 +561,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    public  String selectedUser(){
+        if (spUsers !=null){
+            ChatClient client = (ChatClient)spUsers.getSelectedItem();
+            if(client != null ){
+                user = client.socket.getInetAddress().getHostAddress() + ":1234" ;
+            }
+        }
+        return user;
+    }
 
 
 
