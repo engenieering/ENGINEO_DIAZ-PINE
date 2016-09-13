@@ -1,4 +1,30 @@
+
 <resources>
     <string name="app_name">My Application</string>
     <string name="title_activity_maps">Map</string>
+
+    <string-array name="grade">
+        <item>djn</item>
+        <item>cpr</item>
+        <item>cpc</item>
+        <item>srg</item>
+        <item>src</item>
+        <item>ajd</item>
+        <item>ajc</item>
+        <item>slt</item>
+        <item>ltn</item>
+        <item>cpt</item>
+        <item>cdt</item>
+        <item>lcl</item>
+        <item>cnl</item>
+        <item>gnr</item>
+        <item>gnm</item>
+        <item>gca</item>
+        <item>asp</item>
+    </string-array>
+
+
+
+
 </resources>
+

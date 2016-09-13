@@ -3,6 +3,7 @@ package com.lool.llll.myapplication;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -10,6 +11,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.audiofx.AudioEffect;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -30,6 +32,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -56,7 +59,7 @@ import java.util.regex.Pattern;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener  {
 
     static final int SocketServerPORT = 8080;
-
+    String icon__my_position ="gca";
     Button hidebutton;
     View fVideo;
     View fChat;
@@ -77,7 +80,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public GoogleMap mMap;
     LocationManager locationManager;
+    Location locations;
     String provider;
+    List<LatLng> my_position_list =  new ArrayList<LatLng>();
+
     SupportMapFragment mapFragment ;
 
     public static String user;
@@ -112,7 +118,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         Location location = locationManager.getLastKnownLocation(provider);
         if (location != null){
-          onLocationChanged(location);
+        //          onLocationChanged(location);
 
         }else {
             Toast.makeText(this, "connection failed", Toast.LENGTH_SHORT).show();
@@ -189,7 +195,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //  mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
         //
       //  drawPolyLineOnMap(listLatLng);
-        refreshPosition();
+        // refreshPosition();
       //  addCustomMarker(ss);
       //  addCustomMarker(sss);
 
@@ -231,14 +237,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onLocationChanged(Location location) {
-        double lat = location.getLatitude();
-        double lng = location.getLongitude();
-/*
+        locations =location;
+        my_position_list.add(new LatLng(location.getLatitude(),location.getLongitude()));
+        Log.i("my_position",locations.toString());
+
+        /*
         mMap.clear();
         mMap.addMarker(new  MarkerOptions().position(new LatLng(lat,lng)).title("location"));
        // mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng), 15)); // zoom
-*/
+*/       MapsActivity.this.runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                refreshPosition();
+            }
+        });
+
     }
 
     @Override
@@ -573,24 +588,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
 
-
-
-
     private void refreshPosition(){
        mMap.clear();
 
-        for(int i=0; i<userList.size(); i++){
-            if( userList.get(i).latLng != null) {
+        for(int i=0; i<userList.size(); i++) {
+            if (userList.get(i).latLng != null) {
+
+
                 addCustomMarker(userList.get(i));
                 userList.get(i).latLngLista.add(userList.get(i).latLng);
-               // userList.get(i).latLng= null ;
+                // userList.get(i).latLng= null ;
                 drawPolyLineOnMap(userList.get(i).latLngLista);
                 // mMap.addMarker(new MarkerOptions().position(userList.get(i).latLng).title("Marker"));
                 // Log.i("infoo","latlllllll:"+ userList.get(i).latLng.toString());
             }
-            cameraset();
         }
+         // TODO add my position and polyline
+
+            Log.i("position","before if :"+locations.toString());
+            if(locations != null) {
+                BitmapDescriptor icons = BitmapDescriptorFactory.fromResource(getStringResourceByName(icon__my_position));
+
+                addCustomMarker(new LatLng(locations.getLatitude(), locations.getLongitude()),
+                        "my position"
+                        ,icons
+                         );
+                Log.i("position",locations.toString());
+                drawPolyLineOnMap(my_position_list);
+            }
+
+                cameraset();
     }
+
 
     public void drawPolyLineOnMap(List<LatLng> list) {
         PolylineOptions polyOptions = new PolylineOptions();
@@ -610,6 +639,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         for (ChatClient client : userList) {
             builder.include(client.latLng);
         }
+
+        if (locations != null)  builder.include(new LatLng(locations.getLatitude(),locations.getLongitude()));
+
         final LatLngBounds bounds = builder.build();
         //BOUND_PADDING is an int to specify padding of bound.. try 100.
         CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, 100);
@@ -626,21 +658,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         Log.d("infooo", "addCustomMarker()");
         // adding a marker on map with image from  drawable
+        String name =chatClient.name;
+        String grade = name.substring(0,3);
+        String[] sGrade=getResources().getStringArray(R.array.grade);
+        int i=0;
+        for (;i<sGrade.length;i++){
+
+            if( sGrade[i].contains(grade)) {
+                Log.i("grade", sGrade[i]);
+                break;
+            }
+            }
+        if(i>=sGrade.length) grade = "djn";
+            BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(getStringResourceByName(grade));
+
         MapsActivity.this.mMap.addMarker(new MarkerOptions()
                 .position(chatClient.latLng)
                 .title(chatClient.name)
+                .icon(icon)
 
         );
 
 
-
-
-
-        //  MapsActivity.this.mMap.moveCamera(CameraUpdateFactory.newLatLng(lll));
     }
-    private void addCustomMarker(LatLng latLng) {
+    private int getStringResourceByName(String aString) {
+        String packageName = getPackageName();
+        return  getResources().getIdentifier(aString, "drawable", packageName);
+       // return getString(resId);
+    }
 
 
+    private void addCustomMarker(LatLng latLng,String name
+                    , BitmapDescriptor icon
+                        ) {
         if (mMap == null) {
             return;
         }
@@ -648,8 +698,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // adding a marker on map with image from  drawable
         MapsActivity.this.mMap.addMarker(new MarkerOptions()
                 .position(latLng)
-                .title("latlng")
-
+                .title(name)
+                .icon(icon)
         );
 
 
